@@ -1,7 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { AppState } from './useAppStore';
 
-type GameState = 'INIT' | 'SHUFFLING' | 'SETUP';
+type GameState = 'INIT' | 'SHUFFLING' | 'SETUP' | 'WIN';
 
 export interface GameStateSlice {
   current: GameState;

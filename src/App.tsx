@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore } from './store/useAppStore';
 import HomeOverlay from './components/HomeOverlay';
 import { ShuffleAnimation } from './components/ShuffleAnimation';
+import { VictoryAnimation } from './components/VictoryAnimation';
 
 const App: React.FC = () => {
   const current = useAppStore((state) => state.current);
@@ -13,7 +14,8 @@ const App: React.FC = () => {
       style={{ backgroundImage: `url('/mat.png')` }}
     >
       {current === 'INIT' && <HomeOverlay />}
-      {current === 'SHUFFLING' && <ShuffleAnimation onComplete={() => setGameState('INIT')} />}
+      {current === 'SHUFFLING' && <ShuffleAnimation onComplete={() => setGameState('WIN')} />}
+      {current === 'WIN' && <VictoryAnimation />}
     </div>
   );
 };
