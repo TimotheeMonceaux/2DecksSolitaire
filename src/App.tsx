@@ -15,7 +15,7 @@ const App: React.FC = () => {
     >
       {current === 'INIT' && <HomeOverlay />}
       {current === 'SHUFFLING' && <ShuffleAnimation onComplete={() => setGameState('WIN')} />}
-      {current === 'WIN' && <VictoryAnimation />}
+      {current === 'WIN' && <VictoryAnimation onPlayAgain={() => setGameState('SHUFFLING')}/>}
     </div>
   );
 };

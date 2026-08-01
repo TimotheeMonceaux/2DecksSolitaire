@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 interface VictoryAnimationProps {
+  /** Function triggered when the user clicks the "Rejouer" button */
+  onPlayAgain?: () => void;
   /** Number of bouncing cards to create (default: 16) */
   cardCount?: number;
 }
@@ -10,10 +12,8 @@ interface VictoryAnimationProps {
 interface BouncingCard {
   id: string;
   type: 'blue' | 'red';
-  // Random start positions (% of screen)
   startX: number;
   startY: number;
-  // Keyframe offsets relative to start position
   xOffsets: number[];
   yOffsets: number[];
   rotations: number[];
@@ -24,6 +24,7 @@ const BLUE_CARD = '/cards/Card_back_blue.svg';
 const RED_CARD = '/cards/Card_back_red.svg';
 
 export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
+  onPlayAgain,
   cardCount = 16,
 }) => {
   // Fire periodic firework rockets and bursts
@@ -75,7 +76,6 @@ export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
     return Array.from({ length: cardCount }).map((_, i) => {
       const isBlue = i % 2 === 0;
 
-      // 4 distinct keyframe bounce points to simulate edge collisions
       const xOffsets = [
         0,
         (Math.random() - 0.5) * 600,
@@ -101,12 +101,12 @@ export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
       return {
         id: `win-card-${i}`,
         type: isBlue ? 'blue' : 'red',
-        startX: 10 + Math.random() * 80, // % viewport
-        startY: 10 + Math.random() * 80, // % viewport
+        startX: 10 + Math.random() * 80,
+        startY: 10 + Math.random() * 80,
         xOffsets,
         yOffsets,
         rotations,
-        duration: 4 + Math.random() * 4, // 4s to 8s loop times
+        duration: 4 + Math.random() * 4,
       };
     });
   }, [cardCount]);
@@ -149,7 +149,7 @@ export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
         })}
       </div>
 
-      {/* 2. Winning Banner Text */}
+      {/* 2. Winning Banner Text & Interactive Button */}
       <motion.div
         initial={{ scale: 0, opacity: 0, rotate: -10 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
@@ -158,7 +158,7 @@ export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
           damping: 12,
           stiffness: 100,
         }}
-        className="relative z-10 text-center px-6"
+        className="relative z-10 flex flex-col items-center gap-8 px-6 pointer-events-auto"
       >
         <motion.h1
           animate={{
@@ -178,6 +178,16 @@ export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
         >
           FÉLICITATIONS !!
         </motion.h1>
+
+        {/* Rejouer / Play Again Button */}
+        <motion.button
+          onClick={onPlayAgain}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-black text-xl rounded-full shadow-[0_0_25px_rgba(245,158,11,0.6)] border-2 border-yellow-200 cursor-pointer transition-colors"
+        >
+          Rejouer
+        </motion.button>
       </motion.div>
     </div>
   );
