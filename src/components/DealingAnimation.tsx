@@ -156,7 +156,7 @@ export const DealingAnimation: React.FC<DealingAnimationProps> = ({
           {/* STOCK DECK ANCHOR */}
           <div className="flex flex-col items-center gap-1">
             <span className="text-[10px] sm:text-xs font-semibold text-white/50 tracking-wider uppercase">
-              Stock
+              Deck
             </span>
             <div ref={stockRef} className="relative">
               {/* Empty Deck Container Base */}
@@ -192,6 +192,7 @@ export const DealingAnimation: React.FC<DealingAnimationProps> = ({
               {cardsToDeal.map((item) => (
                 <motion.div
                   key={item.id}
+                  layoutId={`card-${item.card.id}`} // Shared ID with GameBoard
                   custom={item}
                   initial={{ x: '-30vw', y: '-30vh', scale: 1.15, rotateY: 0, opacity: 1 }}
                   animate={controls}

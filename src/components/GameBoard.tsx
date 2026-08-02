@@ -43,17 +43,17 @@ export const GameBoard: React.FC = () => {
               {/* Stacked Cards */}
               {col.map((card, cardIdx) => {
                 const imgUrl = card.isFaceUp ? getFrontImgUrl(card) : getBackImgUrl(card);
-
                 return (
                   <motion.div
                     key={card.id}
-                    layoutId={`card-${card.id}`}
-                    initial={{ y: -50, opacity: 0 }}
-                    animate={{ y: cardIdx * 28, opacity: 1 }} // Tightened vertical cascade offset
+                    layoutId={`card-${card.id}`} // Matches DealingAnimation layoutId
+                    style={{
+                        zIndex: cardIdx,
+                        top: cardIdx * 28, // Use top instead of inline transform 'y' for stability across layout handoffs
+                    }}
                     transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                    style={{ zIndex: cardIdx }}
                     className={`absolute inset-x-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-md border border-black/20 overflow-hidden bg-white cursor-pointer`}
-                  >
+                    >
                     <img
                       src={imgUrl}
                       alt={card.isFaceUp ? `${card.rank} of ${card.suit}` : 'Card back'}

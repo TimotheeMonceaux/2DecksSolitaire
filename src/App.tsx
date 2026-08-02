@@ -5,6 +5,7 @@ import { ShuffleAnimation } from './components/ShuffleAnimation';
 import { DealingAnimation } from './components/DealingAnimation';
 import { VictoryAnimation } from './components/VictoryAnimation';
 import { GameBoard } from './components/GameBoard';
+import { AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
   const current = useAppStore((state) => state.currentGameState);
@@ -26,18 +27,20 @@ const App: React.FC = () => {
     >
       {current === 'INIT' && <HomeOverlay />}
       
-      {current === 'SHUFFLING' && (
-        <ShuffleAnimation onComplete={handleShuffleComplete} />
-      )}
-      
-      {current === 'DEALING' && (
-        <DealingAnimation 
-          tableau={tableau} 
-          onComplete={() => setGameState('PLAYING')} 
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {current === 'SHUFFLING' && (
+          <ShuffleAnimation onComplete={handleShuffleComplete} />
+        )}
+        
+        {current === 'DEALING' && (
+          <DealingAnimation 
+            tableau={tableau} 
+            onComplete={() => setGameState('PLAYING')} 
+          />
+        )}
 
-      {current === 'PLAYING' && <GameBoard />}
+        {current === 'PLAYING' && <GameBoard />}
+      </AnimatePresence>
 
       {current === 'WIN' && (
         <VictoryAnimation onPlayAgain={() => setGameState('SHUFFLING')}/>
