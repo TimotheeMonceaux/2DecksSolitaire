@@ -5,7 +5,7 @@ import { ShuffleAnimation } from './components/ShuffleAnimation';
 import { VictoryAnimation } from './components/VictoryAnimation';
 
 const App: React.FC = () => {
-  const current = useAppStore((state) => state.current);
+  const current = useAppStore((state) => state.currentGameState);
   const setGameState = useAppStore((state) => state.setGameState);
 
   return (
