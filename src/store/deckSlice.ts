@@ -1,6 +1,6 @@
 
 import type { StateCreator } from 'zustand';
-import type { AppState, Card, Suit, Rank, CardDeck } from './store';
+import type { AppState, Card, Suit, Rank, CardDeck, SuitColor } from './store';
 
 export interface DeckSlice {
   deckIndex: number;
@@ -21,6 +21,11 @@ const getSuitFromId: (id: number) => Suit = (id) => {
   }
 }
 
+export const getSuitColor: (s: Suit) => SuitColor = (s) => {
+  if (s === 'Hearts' || s === 'Diamonds') return 'Red';
+  return 'Black';
+}
+
 const getRankFromId: (id: number) => Rank = (id) => {
   let res = Math.floor(id / 8);
   switch (res) {
@@ -37,6 +42,24 @@ const getRankFromId: (id: number) => Rank = (id) => {
     case 10: return 'Jack';
     case 11: return 'Queen';
     default: return 'King';
+  }
+}
+
+export const getRankValue: (r: Rank) => number = (r) => {
+  switch (r) {
+    case 'Ace': return 1;
+    case '2': return 2;
+    case '3': return 3;
+    case '4': return 4;
+    case '5': return 5;
+    case '6': return 6;
+    case '7': return 7;
+    case '8': return 8;
+    case '9': return 9;
+    case '10': return 10;
+    case 'Jack': return 11;
+    case 'Queen': return 12;
+    default: return 13;
   }
 }
 

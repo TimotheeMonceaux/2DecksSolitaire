@@ -5,6 +5,7 @@ import { createPlayStateSlice, type PlayStateSlice } from './playStateSlice';
 
 
 export type Suit = 'Hearts' | 'Diamonds' | 'Clubs' | 'Spades';
+export type SuitColor = 'Red' | 'Black';
 export type Rank = 'Ace' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'Jack' | 'Queen' | 'King';
 export type CardDeck = 'Red' | 'Blue';
 
