@@ -42,8 +42,8 @@ const getRankFromId: (id: number) => Rank = (id) => {
 
 const getCardDeckFromId: (id: number) => CardDeck = (id) => (id % 2 === 0 ? 'Red' : 'Blue');
 
-export const getFrontImgUrl: (card: Card) => string = (card) => `public/cards/${card.rank}_of_${card.suit}.svg`;
-export const getBackImgUrl: (card: Card) => string = (card) => `public/cards/Card_back_${card.deck}.svg`;
+export const getFrontImgUrl: (card: Card) => string = (card) => `/cards/${card.rank}_of_${card.suit}.svg`;
+export const getBackImgUrl: (card: Card) => string = (card) => `/cards/Card_back_${card.deck}.svg`;
 
 const getCardFromId: (id: number, faceUp: boolean) => Card | null = (id, faceUp) => {
   if (!Number.isInteger(id) || id < 0 || id >= 104) return null;

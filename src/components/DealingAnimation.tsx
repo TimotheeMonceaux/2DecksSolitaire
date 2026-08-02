@@ -66,7 +66,7 @@ export const DealingAnimation: React.FC<DealingAnimationProps> = ({
         // Calculate relative position from Stock to Tableau slot + stacked row offset
         calculatedOffsets[item.id] = {
           x: colRect.left - stockRect.left,
-          y: colRect.top - stockRect.top + item.targetRow * 18,
+          y: colRect.top - stockRect.top + item.targetRow * 28,
         };
       }
     });

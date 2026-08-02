@@ -18,7 +18,7 @@ const HomeOverlay: React.FC = () => {
             
             {/* Decorative Badge */}
             <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full shadow-inner">
-              Réussite à 2 jeux
+              Pour Maman
             </span>
 
             {/* Header Section */}

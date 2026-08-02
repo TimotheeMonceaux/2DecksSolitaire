@@ -20,6 +20,7 @@ export const GameBoard: React.FC = () => {
   const undo = useAppStore((state) => (state as any).undo);
   const redo = useAppStore((state) => (state as any).redo);
   const canUndo = history && history.length > 0;
+  const canRedo = false;
 
   const topDeckImg = getDeckTopImgUrl();
 
@@ -48,7 +49,7 @@ export const GameBoard: React.FC = () => {
                     key={card.id}
                     layoutId={`card-${card.id}`}
                     initial={{ y: -50, opacity: 0 }}
-                    animate={{ y: cardIdx * 18, opacity: 1 }} // Tightened vertical cascade offset
+                    animate={{ y: cardIdx * 28, opacity: 1 }} // Tightened vertical cascade offset
                     transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                     style={{ zIndex: cardIdx }}
                     className={`absolute inset-x-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-md border border-black/20 overflow-hidden bg-white cursor-pointer`}
@@ -106,7 +107,7 @@ export const GameBoard: React.FC = () => {
           {/* STOCK DECK: Centered under Foundations */}
           <div className="flex flex-col items-center gap-1">
             <span className="text-[10px] sm:text-xs font-semibold text-white/50 tracking-wider uppercase">
-              Stock
+              Deck
             </span>
             <div className="relative">
               {/* Empty Deck Placeholder */}
@@ -144,14 +145,15 @@ export const GameBoard: React.FC = () => {
             disabled={!canUndo}
             className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white transition-all shadow-md active:scale-95"
           >
-            Undo
+            Annuler
           </button>
 
           <button
             onClick={() => redo?.()}
+            disabled={!canRedo}
             className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95"
           >
-            Redo
+            Refaire
           </button>
 
           <div className="h-4 w-px bg-white/20 mx-0.5" />
@@ -160,7 +162,7 @@ export const GameBoard: React.FC = () => {
             onClick={() => resetGame()}
             className="px-3 py-1 text-xs font-semibold rounded-md bg-rose-600/80 hover:bg-rose-500 text-white transition-all shadow-md active:scale-95"
           >
-            Reset
+            Recommencer
           </button>
         </div>
       </div>
