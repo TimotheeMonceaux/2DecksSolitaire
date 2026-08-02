@@ -1,24 +1,14 @@
 
 import type { StateCreator } from 'zustand';
-import type { AppState } from './useAppStore';
-
-type Suit = 'Hearts' | 'Diamonds' | 'Clubs' | 'Spades';
-type Rank = 'Ace' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'Jack' | 'Queen' | 'King';
-type CardDeck = 'Red' | 'Blue';
-
-export interface Card {
-  id: number;
-  suit: Suit;
-  rank: Rank;
-  deck: CardDeck;
-  isFaceUp: boolean;
-}
+import type { AppState, Card, Suit, Rank, CardDeck } from './store';
 
 export interface DeckSlice {
   deckIndex: number;
   deck: number[];
   deckIsEmpty: boolean;
   draw: (faceUp: boolean) => Card | null;
+  resetAndShuffleDeck: () => void;
+  getDeckTopImgUrl: () => string | null;
 }
 
 const getSuitFromId: (id: number) => Suit = (id) => {
@@ -78,5 +68,14 @@ export const createDeckSlice: StateCreator<AppState, [], [], DeckSlice> = (set, 
     let card = getCardFromId(get().deck[ix++], faceUp);
     set({deckIndex: ix, deckIsEmpty: ix >= 104});
     return card;
+  },
+  getDeckTopImgUrl: () => {
+    if (get().deckIsEmpty) return null;
+    let ix = get().deckIndex;
+    let card = getCardFromId(get().deck[ix++], false);
+    return getBackImgUrl(card!);
+  },
+  resetAndShuffleDeck: () => {
+    set({deckIndex: 0, deckIsEmpty: false, deck: createAndShuffleDeck()})
   }
 });

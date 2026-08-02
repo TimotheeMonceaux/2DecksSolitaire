@@ -1,21 +1,47 @@
 import React from 'react';
-import { useAppStore } from './store/useAppStore';
+import { useAppStore } from './store/store';
 import HomeOverlay from './components/HomeOverlay';
 import { ShuffleAnimation } from './components/ShuffleAnimation';
+import { DealingAnimation } from './components/DealingAnimation';
 import { VictoryAnimation } from './components/VictoryAnimation';
+import { GameBoard } from './components/GameBoard';
 
 const App: React.FC = () => {
   const current = useAppStore((state) => state.currentGameState);
   const setGameState = useAppStore((state) => state.setGameState);
+  const initialSetup = useAppStore((state) => state.initialSetup);
+  const tableau = useAppStore((state) => state.tableau);
+
+  const handleShuffleComplete = () => {
+    // 1. Initialize the board state
+    initialSetup();
+    // 2. Switch to dealing animation
+    setGameState('DEALING');
+  };
 
   return (
     <div 
-      className="relative min-h-screen w-full flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat selection:bg-emerald-500 selection:text-white"
+      className="relative min-h-screen w-full flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat selection:bg-emerald-500 selection:text-white overflow-hidden"
       style={{ backgroundImage: `url('/mat.png')` }}
     >
       {current === 'INIT' && <HomeOverlay />}
-      {current === 'SHUFFLING' && <ShuffleAnimation onComplete={() => setGameState('WIN')} />}
-      {current === 'WIN' && <VictoryAnimation onPlayAgain={() => setGameState('SHUFFLING')}/>}
+      
+      {current === 'SHUFFLING' && (
+        <ShuffleAnimation onComplete={handleShuffleComplete} />
+      )}
+      
+      {current === 'DEALING' && (
+        <DealingAnimation 
+          tableau={tableau} 
+          onComplete={() => setGameState('PLAYING')} 
+        />
+      )}
+
+      {current === 'PLAYING' && <GameBoard />}
+
+      {current === 'WIN' && (
+        <VictoryAnimation onPlayAgain={() => setGameState('SHUFFLING')}/>
+      )}
     </div>
   );
 };
