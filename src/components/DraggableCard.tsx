@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import type { Card } from '../store/store';
 import { getFrontImgUrl, getBackImgUrl } from '../store/deckSlice';
+import { isValidSubStack } from '../store/gameRules'; // 1. Import game rule
 
 interface DraggableCardProps {
   card: Card;
@@ -11,6 +12,7 @@ interface DraggableCardProps {
   colCards: Card[];
   CARD_ASPECT: string;
 }
+
 export const DraggableCard: React.FC<DraggableCardProps> = ({
   card,
   colIndex,
@@ -21,11 +23,15 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
   const isFaceUp = card.isFaceUp;
   const imgUrl = isFaceUp ? getFrontImgUrl(card) : getBackImgUrl(card);
 
+  // Get the stack of cards from this card to the bottom of the column
   const movingSubStack = isFaceUp ? colCards.slice(cardIndex) : [];
+
+  // 2. Check if the sub-stack starting from this card is valid to drag
+  const isValidDrag = isFaceUp && isValidSubStack(movingSubStack);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `card-${card.id}`,
-    disabled: !isFaceUp,
+    disabled: !isValidDrag, // 3. Disable drag if sub-stack sequence is invalid
     data: {
       card,
       colIndex,
@@ -41,7 +47,6 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
       {...attributes}
       {...listeners}
       layoutId={!isDragging ? `card-${card.id}` : undefined}
-      // Pass opacity to Framer Motion's animate prop so FM actively manages the transition
       animate={{ 
         opacity: isDragging ? 0.3 : 1 
       }}
@@ -51,7 +56,7 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
       }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
       className={`absolute inset-x-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-md border border-black/20 overflow-hidden bg-white ${
-        isFaceUp ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
+        isValidDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
     >
       <img

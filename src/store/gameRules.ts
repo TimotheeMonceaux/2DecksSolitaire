@@ -6,10 +6,8 @@ import type { Card } from './store';
 export const isValidTableauMove = (movingCards: Card[], targetColumn: Card[]): boolean => {
   if (movingCards.length === 0) return false;
   
-  // Rule A: Empty columns accept Kings (or any card, depending on your exact rules variant)
-  if (targetColumn.length === 0) {
-    return movingCards[0].rank === 'King'; 
-  }
+  // Rule A: Empty columns accept any card
+  if (targetColumn.length === 0) return true;
 
   const topTarget = targetColumn[targetColumn.length - 1];
   const bottomMoving = movingCards[0];
