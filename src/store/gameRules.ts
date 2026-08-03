@@ -51,3 +51,40 @@ export const isValidSubStack = (cards: Card[]): boolean => {
   }
   return true;
 };
+
+// Check if a card is face-up and has AT LEAST ONE face-down card above it in its column
+export const isBuriedCard = (colCards: Card[], cardIndex: number): boolean => {
+  const card = colCards[cardIndex];
+  if (!card || !card.isFaceUp) return false;
+
+  // Search indices 0 to cardIndex - 1 for any face-down card
+  return colCards.slice(cardIndex).some((c) => !c.isFaceUp);
+};
+
+// Validate exchange eligibility between source and target cards
+export const isValidExchange = (sourceCard: Card, targetCard: Card): boolean => {
+  if (!sourceCard || !targetCard) return false;
+  if (!sourceCard.isFaceUp || !targetCard.isFaceUp) return false;
+
+  const sameRank = sourceCard.rank === targetCard.rank;
+  const sameColor = getSuitColor(sourceCard.suit) === getSuitColor(targetCard.suit);
+  const differentSuit = sourceCard.suit !== targetCard.suit;
+
+  return sameRank && sameColor && differentSuit;
+};
+
+// Updated isValidSubStack or helper for DraggableCard
+export const canDragCard = (colCards: Card[], cardIndex: number): boolean => {
+  const card = colCards[cardIndex];
+  if (!card || !card.isFaceUp) return false;
+
+  // Case 1: Standard Tableau Move (moving this card + all cards below it if it's a valid stack)
+  const movingSubStack = colCards.slice(cardIndex);
+  if (isValidSubStack(movingSubStack)) return true;
+
+  // Case 2: Exchange Move (dragging ONLY this single buried card)
+  // Must be a buried card and MUST be dragged as a single card (cardIndex must be the last card OR we handle single drag)
+  if (isBuriedCard(colCards, cardIndex)) return true;
+
+  return false;
+};

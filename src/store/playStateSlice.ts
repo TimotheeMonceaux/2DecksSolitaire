@@ -1,6 +1,7 @@
+// playStateSlice.ts
 import type { StateCreator } from 'zustand';
 import type { AppState, Card } from './store';
-import { isValidFoundationMove, isValidTableauMove } from './gameRules';
+import { isValidFoundationMove, isValidTableauMove, isValidExchange, isBuriedCard } from './gameRules';
 
 export interface MoveSource {
   type: 'tableau' | 'waste' | 'foundation';
@@ -10,7 +11,7 @@ export interface MoveSource {
 
 export interface MoveTarget {
   type: 'tableau' | 'foundation';
-  index: number; // Column or Foundation pile index
+  index: number;
 }
 
 export interface PlayStateSlice {
@@ -18,7 +19,6 @@ export interface PlayStateSlice {
   tableau: Card[][];
   history: { tableau: Card[][]; foundations: Card[][] }[];
   moveCards: (source: MoveSource, target: MoveTarget) => boolean;
-  //autoRevealTopCards: () => void;
   undo: () => void;
   initialSetup: () => void;
 }
@@ -27,17 +27,56 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
   foundations: Array.from({ length: 8 }, () => []),
   tableau: Array.from({ length: 10 }, () => []),
   history: [],
+
   moveCards: (source, target) => {
     const state = get();
-    // 1. Extract moving card stack
-    let movingCards: Card[] = [];
-    if (source.type === 'tableau' && source.colIndex !== undefined && source.cardIndex !== undefined) {
-      movingCards = state.tableau[source.colIndex].slice(source.cardIndex);
+    if (source.type !== 'tableau' || source.colIndex === undefined || source.cardIndex === undefined) {
+      return false;
     }
 
+    const sourceCol = state.tableau[source.colIndex];
+    const sourceCard = sourceCol[source.cardIndex];
+    if (!sourceCard) return false;
+
+    // --- 1. CHECK FOR EXCHANGE MOVE ---
+    if (target.type === 'tableau') {
+      const targetCol = state.tableau[target.index];
+      const targetTopIndex = targetCol.length - 1;
+
+      // Make sure we aren't trying to exchange a card with ITSELF (when dragging top card to its own column top)
+      const isSamePosition = source.colIndex === target.index && source.cardIndex === targetTopIndex;
+
+      if (!isSamePosition) {
+        const targetTopCard = targetCol[targetTopIndex];
+        const isSourceBuried = isBuriedCard(sourceCol, source.cardIndex);
+
+        if (isSourceBuried && targetTopCard && isValidExchange(sourceCard, targetTopCard)) {
+          // Save history snapshot for Undo
+          const historySnapshot = {
+            tableau: JSON.parse(JSON.stringify(state.tableau)),
+            foundations: JSON.parse(JSON.stringify(state.foundations)),
+          };
+
+          const newTableau = state.tableau.map((col) => [...col]);
+
+          // Swap cards in-place (works for both intra-column and inter-column)
+          newTableau[source.colIndex][source.cardIndex] = targetTopCard;
+          newTableau[target.index][targetTopIndex] = sourceCard;
+
+          set({
+            tableau: newTableau,
+            history: [...state.history, historySnapshot],
+          });
+
+          return true;
+        }
+      }
+    }
+
+    // --- 2. STANDARD MOVE LOGIC ---
+    const movingCards = sourceCol.slice(source.cardIndex);
     if (movingCards.length === 0) return false;
 
-    // 2. Validate move target
     let isValid = false;
     if (target.type === 'tableau') {
       isValid = isValidTableauMove(movingCards, state.tableau[target.index]);
@@ -47,25 +86,22 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
 
     if (!isValid) return false;
 
-    // 3. Save Deep Snapshot for Undo
+    // Save Deep Snapshot for Undo
     const historySnapshot = {
       tableau: JSON.parse(JSON.stringify(state.tableau)),
       foundations: JSON.parse(JSON.stringify(state.foundations)),
     };
 
-    // 4. Apply Move
-    const newTableau = state.tableau.map(col => [...col]);
-    const newFoundations = state.foundations.map(pile => [...pile]);
+    const newTableau = state.tableau.map((col) => [...col]);
+    const newFoundations = state.foundations.map((pile) => [...pile]);
 
-    if (source.type === 'tableau' && source.colIndex !== undefined) {
-      // Remove cards from origin column
-      newTableau[source.colIndex] = newTableau[source.colIndex].slice(0, source.cardIndex);
-      
-      // Auto-flip the new exposed top card if it's face down
-      const originCol = newTableau[source.colIndex];
-      if (originCol.length > 0 && !originCol[originCol.length - 1].isFaceUp) {
-        originCol[originCol.length - 1].isFaceUp = true;
-      }
+    // Remove cards from origin column
+    newTableau[source.colIndex] = newTableau[source.colIndex].slice(0, source.cardIndex);
+
+    // Auto-flip newly exposed top card if face down
+    const originCol = newTableau[source.colIndex];
+    if (originCol.length > 0 && !originCol[originCol.length - 1].isFaceUp) {
+      originCol[originCol.length - 1].isFaceUp = true;
     }
 
     if (target.type === 'tableau') {
@@ -94,23 +130,14 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
       history: history.slice(0, -1),
     });
   },
-  initialSetup: () => 
-  {
-    // 1. Reset deck back to initial shuffled state
-    get().resetAndShuffleDeck();
 
-    // 2. Prepare 10 empty columns for tableau
+  initialSetup: () => {
+    get().resetAndShuffleDeck();
     const newTableau: Card[][] = Array.from({ length: 10 }, () => []);
 
-    // 3. Build pyramid row by row
-    // Row 0 has 10 cards (cols 0..9), Row 1 has 9 cards (cols 0..8), ..., Row 9 has 1 card (col 0)
     for (let r = 0; r < 10; r++) {
       for (let c = 0; c < 10 - r; c++) {
-        // (r + c) parity handles alternating orientation:
-        // Row 0 (r=0): c=0 (Even -> Face Down), c=1 (Odd -> Face Up), ...
-        // Row 1 (r=1): c=0 (Odd -> Face Up),   c=1 (Even -> Face Down), ...
         const isFaceUp = (r + c) % 2 === 1;
-
         const drawnCard = get().draw(isFaceUp);
         if (drawnCard) {
           newTableau[c].push(drawnCard);
@@ -118,11 +145,10 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
       }
     }
 
-    // 4. Update the state (reset foundations & history as well)
     set({
       tableau: newTableau,
       foundations: Array.from({ length: 8 }, () => []),
-      history: []
+      history: [],
     });
-  }
+  },
 });

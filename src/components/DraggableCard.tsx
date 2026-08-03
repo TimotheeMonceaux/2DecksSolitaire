@@ -1,9 +1,10 @@
+// DraggableCard.tsx
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import type { Card } from '../store/store';
 import { getFrontImgUrl, getBackImgUrl } from '../store/deckSlice';
-import { isValidSubStack } from '../store/gameRules'; // 1. Import game rule
+import { isValidSubStack, isBuriedCard } from '../store/gameRules';
 
 interface DraggableCardProps {
   card: Card;
@@ -23,20 +24,25 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
   const isFaceUp = card.isFaceUp;
   const imgUrl = isFaceUp ? getFrontImgUrl(card) : getBackImgUrl(card);
 
-  // Get the stack of cards from this card to the bottom of the column
-  const movingSubStack = isFaceUp ? colCards.slice(cardIndex) : [];
+  const subStack = isFaceUp ? colCards.slice(cardIndex) : [];
+  const isSubStackValid = isFaceUp && isValidSubStack(subStack);
+  const isBuried = isFaceUp && isBuriedCard(colCards, cardIndex);
 
-  // 2. Check if the sub-stack starting from this card is valid to drag
-  const isValidDrag = isFaceUp && isValidSubStack(movingSubStack);
+  // Card can be dragged either as a standard valid sequence or as a single buried card for an exchange
+  const isValidDrag = isSubStackValid || isBuried;
+
+  // If dragging a buried card that isn't a valid sequence start, only attach the single card
+  const movingCards = isSubStackValid ? subStack : [card];
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `card-${card.id}`,
-    disabled: !isValidDrag, // 3. Disable drag if sub-stack sequence is invalid
+    disabled: !isValidDrag,
     data: {
       card,
       colIndex,
       cardIndex,
-      cards: movingSubStack,
+      cards: movingCards,
+      isExchangeDrag: isBuried && !isSubStackValid, // Flag to indicate potential exchange
       source: { type: 'tableau', colIndex, cardIndex },
     },
   });
@@ -47,8 +53,8 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
       {...attributes}
       {...listeners}
       layoutId={!isDragging ? `card-${card.id}` : undefined}
-      animate={{ 
-        opacity: isDragging ? 0.3 : 1 
+      animate={{
+        opacity: isDragging ? 0.3 : 1,
       }}
       style={{
         zIndex: cardIndex,

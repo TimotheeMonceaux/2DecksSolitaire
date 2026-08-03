@@ -102,7 +102,7 @@ export const GameBoard: React.FC = () => {
 
                 return (
                   <DroppableFoundation key={`foundation-${pileIdx}`} pileIdx={pileIdx} CARD_ASPECT={CARD_ASPECT}>
-                    {!topCard && <span className="text-white/20 font-bold text-xs">A</span>}
+                    {!topCard && <span className="text-white/20 font-bold text-xs">AS</span>}
 
                     <AnimatePresence>
                       {topCard && (
