@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, type Card } from '../store/store';
 import { getFrontImgUrl } from '../store/deckSlice';
-import { DndContext, type DragStartEvent, type DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, type DragStartEvent, type DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors,
+    pointerWithin, rectIntersection, getFirstCollision, type CollisionDetection  } from '@dnd-kit/core';
 import type { MoveSource, MoveTarget } from '../store/playStateSlice';
 import { DraggableCard } from './DraggableCard';
 import { DroppableColumn } from './DroppableColumn';
@@ -58,8 +59,16 @@ export const GameBoard: React.FC = () => {
     }
   };
 
+  const customCollisionDetection: CollisionDetection = (args) => {
+    // First check if pointer is directly within a droppable target
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) return pointerCollisions;
+    // Fall back to rectangle intersection if pointer detection finds nothing
+    return rectIntersection(args);
+  };
+
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={customCollisionDetection}>
       <div className="relative w-full h-screen max-w-[1400px] mx-auto p-3 flex flex-col justify-between select-none">
         
         {/* MAIN PLAY AREA */}

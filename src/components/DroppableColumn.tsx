@@ -16,7 +16,8 @@ export const DroppableColumn: React.FC<DroppableColumnProps> = ({ colIdx, childr
   return (
     <div
       ref={setNodeRef}
-      className={`relative flex-1 ${CARD_ASPECT} min-w-[56px] sm:min-w-[64px] h-full transition-colors rounded-md sm:rounded-lg ${
+      // 1. Ensure `h-full` and `min-h-[...]` cover the height where cards cascade down
+      className={`relative flex-1 ${CARD_ASPECT} min-w-[56px] sm:min-w-[64px] h-full min-h-[500px] transition-colors rounded-md sm:rounded-lg ${
         isOver ? 'ring-2 ring-emerald-400/80 bg-emerald-500/10' : ''
       }`}
     >
