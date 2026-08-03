@@ -38,7 +38,7 @@ export const isValidFoundationMove = (card: Card, targetFoundation: Card[]): boo
   // Must match suit & be strictly ascending rank
   return (
     topFoundation.suit === card.suit &&
-    getRankValue(card.rank) + 1 === getRankValue(card.rank)
+    getRankValue(topFoundation.rank) + 1 === getRankValue(card.rank)
   );
 };
 

@@ -68,7 +68,7 @@ export const GameBoard: React.FC = () => {
   };
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={customCollisionDetection}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDrag(null)} collisionDetection={customCollisionDetection}>
       <div className="relative w-full h-screen max-w-[1400px] mx-auto p-3 flex flex-col justify-between select-none">
         
         {/* MAIN PLAY AREA */}
