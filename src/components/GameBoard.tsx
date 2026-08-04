@@ -65,8 +65,8 @@ export const GameBoard: React.FC = () => {
   }),
   useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 150, // Requires a short hold (150ms) before dragging begins
-      tolerance: 5, // Allows slight finger jitter during delay without canceling drag
+      delay: 0,
+      tolerance: 5
     },
   })
 );
