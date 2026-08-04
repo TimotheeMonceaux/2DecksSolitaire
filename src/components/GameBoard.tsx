@@ -217,7 +217,7 @@ export const GameBoard: React.FC = () => {
               </span>
               <div ref={stockRef} className="relative">
                 <div className={`${CARD_ASPECT} rounded-md sm:rounded-lg border-2 border-dashed border-white/20 bg-black/20 flex items-center justify-center`}>
-                  <span className="text-white/30 text-[10px] sm:text-xs font-semibold">Empty</span>
+                  <span className="text-white/30 text-[10px] sm:text-xs font-semibold">Vide</span>
                 </div>
 
                 {!deckIsEmpty && topDeckImg && (
