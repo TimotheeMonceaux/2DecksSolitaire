@@ -148,7 +148,7 @@ export const DealingAnimation: React.FC<DealingAnimationProps> = ({
                 key={`foundation-slot-${pileIdx}`}
                 className={`relative ${CARD_ASPECT} rounded-md sm:rounded-lg border-2 border-dashed border-white/20 bg-emerald-950/20 flex items-center justify-center shadow-inner`}
               >
-                <span className="text-white/20 font-bold text-xs">A</span>
+                <span className="text-white/20 font-bold text-xs">AS</span>
               </div>
             ))}
           </div>
