@@ -61,7 +61,7 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
         top: cardIndex * 28,
       }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      className={`absolute inset-x-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-md border border-black/20 overflow-hidden bg-white ${
+      className={`absolute inset-x-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-md border border-black/20 overflow-hidden bg-white touch-none ${
         isValidDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
       }`}
     >

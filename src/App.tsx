@@ -22,7 +22,7 @@ const App: React.FC = () => {
 
   return (
     <div 
-      className="relative min-h-screen w-full flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat selection:bg-emerald-500 selection:text-white overflow-hidden"
+      className="relative min-h-screen w-full flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat selection:bg-emerald-500 selection:text-white overflow-hidden touch-none"
       style={{ backgroundImage: `url('${import.meta.env.BASE_URL}/mat.png')` }}
     >
       {current === 'INIT' && <HomeOverlay />}

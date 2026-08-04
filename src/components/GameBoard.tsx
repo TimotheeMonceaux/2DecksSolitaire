@@ -7,7 +7,8 @@ import {
   type DragStartEvent,
   type DragEndEvent,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   pointerWithin,
@@ -57,8 +58,18 @@ export const GameBoard: React.FC = () => {
   const [isDealing, setIsDealing] = useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  }),
+  useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 150, // Requires a short hold (150ms) before dragging begins
+      tolerance: 5, // Allows slight finger jitter during delay without canceling drag
+    },
+  })
+);
 
   const handleConfirmReset = () => {
     setShowResetModal(false);
