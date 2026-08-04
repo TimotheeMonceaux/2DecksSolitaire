@@ -79,7 +79,21 @@ const getCardFromId: (id: number, faceUp: boolean) => Card | null = (id, faceUp)
   }
 };
 
-const createAndShuffleDeck: () => number[] = () => Array.from({ length: 104 }, (_, i) => i).sort(() => 0.5 - Math.random())
+function shuffle(array: number[]) {
+    var tmp, current, top = array.length;
+
+    if(top) while(--top) {
+        current = Math.floor(Math.random() * (top + 1));
+        tmp = array[current];
+        array[current] = array[top];
+        array[top] = tmp;
+    }
+
+    return array;
+}
+
+
+const createAndShuffleDeck: () => number[] = () => shuffle(Array.from({ length: 104 }, (_, i) => i))
 
 export const createDeckSlice: StateCreator<AppState, [], [], DeckSlice> = (set, get) => ({
   deckIndex: 0,
