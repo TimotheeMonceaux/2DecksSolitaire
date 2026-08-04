@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, type Card } from '../store/store';
-import { getFrontImgUrl } from '../store/deckSlice';
+import { getFrontImgUrl, getBackImgUrl } from '../store/deckSlice';
 import { DndContext, type DragStartEvent, type DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors,
-    pointerWithin, rectIntersection, getFirstCollision, type CollisionDetection  } from '@dnd-kit/core';
+    pointerWithin, rectIntersection, type CollisionDetection } from '@dnd-kit/core';
 import type { MoveSource, MoveTarget } from '../store/playStateSlice';
 import { DraggableCard } from './DraggableCard';
 import { DroppableColumn } from './DroppableColumn';
@@ -11,12 +11,22 @@ import { DroppableFoundation } from './DroppableFoundation';
 
 const CARD_ASPECT = 'w-14 h-20 sm:w-16 sm:h-24 md:w-18 md:h-26 lg:w-20 lg:h-28';
 
+interface FlyingCard {
+  card: Card;
+  targetCol: number;
+  targetRow: number;
+  deltaX: number;
+  deltaY: number;
+}
+
 export const GameBoard: React.FC = () => {
   const tableau = useAppStore((state) => state.tableau);
   const foundations = useAppStore((state) => state.foundations);
   const deckIsEmpty = useAppStore((state) => state.deckIsEmpty);
+  const deck = useAppStore((state) => state.deck);
+  const deckIndex = useAppStore((state) => state.deckIndex);
   const getDeckTopImgUrl = useAppStore((state) => state.getDeckTopImgUrl);
-  const draw = useAppStore((state) => state.draw);
+  const drawRowFromDeck = useAppStore((state) => state.drawRowFromDeck);
   const resetGame = useAppStore((state) => state.resetGame);
 
   const history = useAppStore((state) => state.history);
@@ -26,13 +36,69 @@ export const GameBoard: React.FC = () => {
   const canRedo = false;
 
   const topDeckImg = getDeckTopImgUrl();
-
   const moveCards = useAppStore((state) => state.moveCards);
   const [activeDrag, setActiveDrag] = useState<{ source: MoveSource; cards: Card[] } | null>(null);
+
+  // Animation Refs & Local State
+  const stockRef = useRef<HTMLDivElement>(null);
+  const colRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [flyingCards, setFlyingCards] = useState<FlyingCard[]>([]);
+  const [isDealing, setIsDealing] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+
+  const handleDeckClick = () => {
+    if (deckIsEmpty || isDealing || !stockRef.current) return;
+
+    setIsDealing(true);
+
+    const stockRect = stockRef.current.getBoundingClientRect();
+    const newFlyingCards: FlyingCard[] = [];
+
+    // 1. Peak into upcoming cards in deck slice without mutating store state yet
+    let currentIndex = deckIndex;
+    for (let c = 0; c < 10; c++) {
+      if (currentIndex >= deck.length) break;
+
+      const cardId = deck[currentIndex];
+      // Helper function matching deckSlice logic to project card data visually
+      const card: Card = {
+        id: cardId,
+        suit: ['Hearts', 'Diamonds', 'Clubs', 'Spades'][Math.floor(cardId / 2) % 4] as any,
+        rank: ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King'][Math.floor(cardId / 8)] as any,
+        deck: cardId % 2 === 0 ? 'Red' : 'Blue',
+        isFaceUp: true,
+      };
+
+      const colEl = colRefs.current[c];
+      if (colEl) {
+        const colRect = colEl.getBoundingClientRect();
+        const targetRow = tableau[c].length;
+
+        newFlyingCards.push({
+          card,
+          targetCol: c,
+          targetRow,
+          deltaX: colRect.left - stockRect.left,
+          deltaY: colRect.top - stockRect.top + targetRow * 28,
+        });
+      }
+
+      currentIndex++;
+    }
+
+    setFlyingCards(newFlyingCards);
+
+    // 2. Schedule Zustand state sync right after animation finishes
+    const totalDuration = newFlyingCards.length * 50 + 350; // Delay offset + flight duration
+    setTimeout(() => {
+      drawRowFromDeck();
+      setFlyingCards([]);
+      setIsDealing(false);
+    }, totalDuration);
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -60,10 +126,8 @@ export const GameBoard: React.FC = () => {
   };
 
   const customCollisionDetection: CollisionDetection = (args) => {
-    // First check if pointer is directly within a droppable target
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) return pointerCollisions;
-    // Fall back to rectangle intersection if pointer detection finds nothing
     return rectIntersection(args);
   };
 
@@ -77,18 +141,24 @@ export const GameBoard: React.FC = () => {
           {/* TABLEAU */}
           <div className="flex-1 flex justify-start items-start gap-1 sm:gap-2 overflow-x-auto min-h-0">
             {tableau.map((col, colIdx) => (
-              <DroppableColumn key={`col-${colIdx}`} colIdx={colIdx} CARD_ASPECT={CARD_ASPECT}>
-                {col.map((card, cardIdx) => (
-                  <DraggableCard
-                    key={card.id}
-                    card={card}
-                    colIndex={colIdx}
-                    cardIndex={cardIdx}
-                    colCards={col}
-                    CARD_ASPECT={CARD_ASPECT}
-                  />
-                ))}
-              </DroppableColumn>
+              <div 
+                key={`col-anchor-${colIdx}`}
+                ref={(el) => (colRefs.current[colIdx] = el)}
+                className="relative flex-1 min-w-[56px] sm:min-w-[64px] h-full"
+              >
+                <DroppableColumn colIdx={colIdx} CARD_ASPECT={CARD_ASPECT}>
+                  {col.map((card, cardIdx) => (
+                    <DraggableCard
+                      key={card.id}
+                      card={card}
+                      colIndex={colIdx}
+                      cardIndex={cardIdx}
+                      colCards={col}
+                      CARD_ASPECT={CARD_ASPECT}
+                    />
+                  ))}
+                </DroppableColumn>
+              </div>
             ))}
           </div>
 
@@ -127,18 +197,18 @@ export const GameBoard: React.FC = () => {
             {/* STOCK DECK */}
             <div className="flex flex-col items-center gap-1">
               <span className="text-[10px] sm:text-xs font-semibold text-white/50 tracking-wider uppercase">
-                Deck
+                Pioche
               </span>
-              <div className="relative">
+              <div ref={stockRef} className="relative">
                 <div className={`${CARD_ASPECT} rounded-md sm:rounded-lg border-2 border-dashed border-white/20 bg-black/20 flex items-center justify-center`}>
                   <span className="text-white/30 text-[10px] sm:text-xs font-semibold">Empty</span>
                 </div>
 
                 {!deckIsEmpty && topDeckImg && (
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => draw(true)}
+                    whileHover={{ scale: isDealing ? 1 : 1.05 }}
+                    whileTap={{ scale: isDealing ? 1 : 0.95 }}
+                    onClick={handleDeckClick}
                     className={`absolute inset-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-xl border border-black/30 overflow-hidden cursor-pointer bg-white z-10`}
                   >
                     <img
@@ -149,6 +219,55 @@ export const GameBoard: React.FC = () => {
                     />
                   </motion.div>
                 )}
+
+                {/* ANIMATED CARDS FLYING OUT OF STOCK DECK */}
+                {flyingCards.map((item, idx) => (
+                  <motion.div
+                    key={`fly-card-${item.card.id}`}
+                    initial={{ x: 0, y: 0, rotateY: 0, opacity: 1 }}
+                    animate={{
+                      x: item.deltaX,
+                      y: item.deltaY,
+                      rotateY: 180,
+                    }}
+                    transition={{
+                      delay: idx * 0.05,
+                      duration: 0.35,
+                      ease: [0.25, 1, 0.5, 1],
+                    }}
+                    style={{ transformStyle: 'preserve-3d', zIndex: 50 + idx }}
+                    className={`absolute inset-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-lg border border-black/20 bg-white pointer-events-none`}
+                  >
+                    {/* Card Back */}
+                    <div
+                      className="absolute inset-0 w-full h-full"
+                      style={{ backfaceVisibility: 'hidden' }}
+                    >
+                      <img
+                        src={getBackImgUrl(item.card)}
+                        alt="Card back"
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    </div>
+
+                    {/* Card Front */}
+                    <div
+                      className="absolute inset-0 w-full h-full"
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                      }}
+                    >
+                      <img
+                        src={getFrontImgUrl(item.card)}
+                        alt={`${item.card.rank} of ${item.card.suit}`}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </div>
 
@@ -158,10 +277,10 @@ export const GameBoard: React.FC = () => {
         {/* BOTTOM BAR CONTROLS */}
         <div className="relative w-full h-12 flex items-center justify-center z-20 mt-2">
           <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-2xl">
-            <button onClick={() => undo?.()} disabled={!canUndo} className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95">
+            <button onClick={() => undo?.()} disabled={!canUndo || isDealing} className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95">
               Annuler
             </button>
-            <button onClick={() => redo?.()} disabled={!canRedo} className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95">
+            <button onClick={() => redo?.()} disabled={!canRedo || isDealing} className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95">
               Refaire
             </button>
             <div className="h-4 w-px bg-white/20 mx-0.5" />

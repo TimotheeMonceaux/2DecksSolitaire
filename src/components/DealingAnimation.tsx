@@ -156,7 +156,7 @@ export const DealingAnimation: React.FC<DealingAnimationProps> = ({
           {/* STOCK DECK ANCHOR */}
           <div className="flex flex-col items-center gap-1">
             <span className="text-[10px] sm:text-xs font-semibold text-white/50 tracking-wider uppercase">
-              Deck
+              Pioche
             </span>
             <div ref={stockRef} className="relative">
               {/* Empty Deck Container Base */}

@@ -19,6 +19,7 @@ export interface PlayStateSlice {
   tableau: Card[][];
   history: { tableau: Card[][]; foundations: Card[][] }[];
   moveCards: (source: MoveSource, target: MoveTarget) => boolean;
+  drawRowFromDeck: () => void;
   undo: () => void;
   initialSetup: () => void;
 }
@@ -117,6 +118,32 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
     });
 
     return true;
+  },
+
+  drawRowFromDeck: () => {
+    const state = get();
+    if (state.deckIsEmpty) return;
+
+    // Save history snapshot before drawing
+    const historySnapshot = {
+      tableau: JSON.parse(JSON.stringify(state.tableau)),
+      foundations: JSON.parse(JSON.stringify(state.foundations)),
+    };
+
+    const newTableau = state.tableau.map((col) => [...col]);
+
+    for (let c = 0; c < 10; c++) {
+      if (get().deckIsEmpty) break;
+      const card = get().draw(true); // Draw 1 face-up card
+      if (card) {
+        newTableau[c].push(card);
+      }
+    }
+
+    set({
+      tableau: newTableau,
+      history: [...state.history, historySnapshot],
+    });
   },
 
   undo: () => {
