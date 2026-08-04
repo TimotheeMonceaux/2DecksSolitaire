@@ -10,7 +10,7 @@ export interface GameStateSlice {
   reset: () => void;
 }
 
-export const createGameStateSlice: StateCreator<AppState, [], [], GameStateSlice> = (set, get) => ({
+export const createGameStateSlice: StateCreator<AppState, [], [], GameStateSlice> = (set) => ({
   currentGameState: 'INIT',
   setGameState: (item: GameState) => set({ currentGameState: item }),
   resetGame: () => set({ currentGameState: 'SHUFFLING' }),

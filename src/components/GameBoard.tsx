@@ -160,7 +160,7 @@ export const GameBoard: React.FC = () => {
             {tableau.map((col, colIdx) => (
               <div
                 key={`col-anchor-${colIdx}`}
-                ref={(el) => (colRefs.current[colIdx] = el)}
+                ref={(el) => {colRefs.current[colIdx] = el}}
                 className="relative flex-1 min-w-[56px] sm:min-w-[64px] h-full"
               >
                 <DroppableColumn colIdx={colIdx} CARD_ASPECT={CARD_ASPECT}>

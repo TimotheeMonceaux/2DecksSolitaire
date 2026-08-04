@@ -79,7 +79,7 @@ const getCardFromId: (id: number, faceUp: boolean) => Card | null = (id, faceUp)
   }
 };
 
-const createAndShuffleDeck: () => number[] = () => Array.from({ length: 104 }, (_, i) => i).sort((a, b) => 0.5 - Math.random())
+const createAndShuffleDeck: () => number[] = () => Array.from({ length: 104 }, (_, i) => i).sort(() => 0.5 - Math.random())
 
 export const createDeckSlice: StateCreator<AppState, [], [], DeckSlice> = (set, get) => ({
   deckIndex: 0,
