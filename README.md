@@ -1,32 +1,7 @@
-# React + TypeScript + Vite
+# 2-Decks Solitaire
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+2-Decks solitaire is a playable single page app based on a playing card game that my mom loves to play. Since she does not like so much all the setup, I built this for her so that everything's automated for her.
 
-Currently, two official plugins are available:
+[Playable in the browser here](https://timotheemonceaux.github.io/2DecksSolitaire/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+![game screen capture](2DecksSolitaire.png)
