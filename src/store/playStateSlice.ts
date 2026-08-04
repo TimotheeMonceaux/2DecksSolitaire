@@ -1,7 +1,7 @@
 // playStateSlice.ts
 import type { StateCreator } from 'zustand';
 import type { AppState, Card } from './store';
-import { isValidFoundationMove, isValidTableauMove, isValidExchange, isBuriedCard } from './gameRules';
+import { isValidFoundationMove, isValidTableauMove, isValidExchange, isBuriedCard, checkWinCondition } from './gameRules';
 
 export interface MoveSource {
   type: 'tableau' | 'waste' | 'foundation';
@@ -116,6 +116,14 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
       foundations: newFoundations,
       history: [...state.history, historySnapshot],
     });
+
+    // --- 3. CHECK FOR WIN CONDITION ---
+    if (target.type === 'foundation') {
+      const isWin = checkWinCondition(movingCards[0], newTableau, state.deckIsEmpty);
+      if (isWin) {
+        state.setGameState('WIN');
+      }
+    }
 
     return true;
   },

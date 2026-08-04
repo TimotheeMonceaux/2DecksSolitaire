@@ -2,8 +2,18 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, type Card } from '../store/store';
 import { getFrontImgUrl, getBackImgUrl } from '../store/deckSlice';
-import { DndContext, type DragStartEvent, type DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors,
-    pointerWithin, rectIntersection, type CollisionDetection } from '@dnd-kit/core';
+import {
+  DndContext,
+  type DragStartEvent,
+  type DragEndEvent,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
+} from '@dnd-kit/core';
 import type { MoveSource, MoveTarget } from '../store/playStateSlice';
 import { DraggableCard } from './DraggableCard';
 import { DroppableColumn } from './DroppableColumn';
@@ -30,14 +40,15 @@ export const GameBoard: React.FC = () => {
   const resetGame = useAppStore((state) => state.resetGame);
 
   const history = useAppStore((state) => state.history);
-  const undo = useAppStore((state) => (state as any).undo);
-  const redo = useAppStore((state) => (state as any).redo);
+  const undo = useAppStore((state) => state.undo);
   const canUndo = history && history.length > 0;
-  const canRedo = false;
 
   const topDeckImg = getDeckTopImgUrl();
   const moveCards = useAppStore((state) => state.moveCards);
   const [activeDrag, setActiveDrag] = useState<{ source: MoveSource; cards: Card[] } | null>(null);
+
+  // Modal State
+  const [showResetModal, setShowResetModal] = useState(false);
 
   // Animation Refs & Local State
   const stockRef = useRef<HTMLDivElement>(null);
@@ -49,6 +60,11 @@ export const GameBoard: React.FC = () => {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  const handleConfirmReset = () => {
+    setShowResetModal(false);
+    resetGame();
+  };
+
   const handleDeckClick = () => {
     if (deckIsEmpty || isDealing || !stockRef.current) return;
 
@@ -57,13 +73,11 @@ export const GameBoard: React.FC = () => {
     const stockRect = stockRef.current.getBoundingClientRect();
     const newFlyingCards: FlyingCard[] = [];
 
-    // 1. Peak into upcoming cards in deck slice without mutating store state yet
     let currentIndex = deckIndex;
     for (let c = 0; c < 10; c++) {
       if (currentIndex >= deck.length) break;
 
       const cardId = deck[currentIndex];
-      // Helper function matching deckSlice logic to project card data visually
       const card: Card = {
         id: cardId,
         suit: ['Hearts', 'Diamonds', 'Clubs', 'Spades'][Math.floor(cardId / 2) % 4] as any,
@@ -91,8 +105,7 @@ export const GameBoard: React.FC = () => {
 
     setFlyingCards(newFlyingCards);
 
-    // 2. Schedule Zustand state sync right after animation finishes
-    const totalDuration = newFlyingCards.length * 50 + 350; // Delay offset + flight duration
+    const totalDuration = newFlyingCards.length * 50 + 350;
     setTimeout(() => {
       drawRowFromDeck();
       setFlyingCards([]);
@@ -132,16 +145,20 @@ export const GameBoard: React.FC = () => {
   };
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDrag(null)} collisionDetection={customCollisionDetection}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveDrag(null)}
+      collisionDetection={customCollisionDetection}
+    >
       <div className="relative w-full h-screen max-w-[1400px] mx-auto p-3 flex flex-col justify-between select-none">
-        
         {/* MAIN PLAY AREA */}
         <div className="flex-1 flex justify-between gap-3 min-h-0 pt-1">
-          
           {/* TABLEAU */}
           <div className="flex-1 flex justify-start items-start gap-1 sm:gap-2 overflow-x-auto min-h-0">
             {tableau.map((col, colIdx) => (
-              <div 
+              <div
                 key={`col-anchor-${colIdx}`}
                 ref={(el) => (colRefs.current[colIdx] = el)}
                 className="relative flex-1 min-w-[56px] sm:min-w-[64px] h-full"
@@ -164,7 +181,6 @@ export const GameBoard: React.FC = () => {
 
           {/* RIGHT SIDE PANEL */}
           <div className="flex flex-col items-center gap-4">
-            
             {/* FOUNDATIONS */}
             <div className="grid grid-cols-2 grid-rows-4 gap-1.5 sm:gap-2 bg-black/25 p-2 rounded-xl backdrop-blur-sm border border-white/10 shadow-lg">
               {foundations.map((pile, pileIdx) => {
@@ -238,7 +254,6 @@ export const GameBoard: React.FC = () => {
                     style={{ transformStyle: 'preserve-3d', zIndex: 50 + idx }}
                     className={`absolute inset-0 ${CARD_ASPECT} rounded-md sm:rounded-lg shadow-lg border border-black/20 bg-white pointer-events-none`}
                   >
-                    {/* Card Back */}
                     <div
                       className="absolute inset-0 w-full h-full"
                       style={{ backfaceVisibility: 'hidden' }}
@@ -251,7 +266,6 @@ export const GameBoard: React.FC = () => {
                       />
                     </div>
 
-                    {/* Card Front */}
                     <div
                       className="absolute inset-0 w-full h-full"
                       style={{
@@ -270,26 +284,80 @@ export const GameBoard: React.FC = () => {
                 ))}
               </div>
             </div>
-
           </div>
         </div>
 
         {/* BOTTOM BAR CONTROLS */}
         <div className="relative w-full h-12 flex items-center justify-center z-20 mt-2">
           <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-2xl">
-            <button onClick={() => undo?.()} disabled={!canUndo || isDealing} className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95">
+            <button
+              onClick={() => undo?.()}
+              disabled={!canUndo || isDealing}
+              className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95 cursor-pointer"
+            >
               Annuler
             </button>
-            <button onClick={() => redo?.()} disabled={!canRedo || isDealing} className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95">
-              Refaire
-            </button>
             <div className="h-4 w-px bg-white/20 mx-0.5" />
-            <button onClick={() => resetGame()} className="px-3 py-1 text-xs font-semibold rounded-md bg-rose-600/80 hover:bg-rose-500 text-white transition-all shadow-md active:scale-95">
+            <button
+              onClick={() => setShowResetModal(true)}
+              className="px-3 py-1 text-xs font-semibold rounded-md bg-rose-600/80 hover:bg-rose-500 text-white transition-all shadow-md active:scale-95 cursor-pointer"
+            >
               Recommencer
             </button>
           </div>
         </div>
       </div>
+
+      {/* CONFIRMATION RESET MODAL */}
+      <AnimatePresence>
+        {showResetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowResetModal(false)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Box matching HomeOverlay style */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="relative z-10 w-full max-w-sm p-6 sm:p-8 text-center bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl space-y-5"
+            >
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  Recommencer ?
+                </h2>
+                <p className="text-sm text-slate-300 font-medium leading-relaxed">
+                  Êtes-vous sûr de vouloir recommencer la partie&#160;? <br/>
+                  Toute votre progression sera perdue.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => setShowResetModal(false)}
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-700/80 rounded-xl border border-white/10 transition-all cursor-pointer active:scale-95"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleConfirmReset}
+                  className="px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-lg shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* DRAG OVERLAY */}
       <DragOverlay dropAnimation={{ duration: 150, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>

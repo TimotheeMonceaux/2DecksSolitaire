@@ -88,3 +88,23 @@ export const canDragCard = (colCards: Card[], cardIndex: number): boolean => {
 
   return false;
 };
+
+/**
+ * Checks whether the game has been won:
+ * 1. The moved card placed onto the foundation is a King.
+ * 2. The deck is completely empty.
+ * 3. Every column in the tableau is empty.
+ */
+export const checkWinCondition = (
+  movedCard: Card,
+  tableau: Card[][],
+  deckIsEmpty: boolean
+): boolean => {
+  if (movedCard.rank !== 'King') return false;
+  if (!deckIsEmpty) return false;
+
+  // Check that every column in the tableau has 0 cards
+  const isTableauEmpty = tableau.every((col) => col.length === 0);
+
+  return isTableauEmpty;
+};

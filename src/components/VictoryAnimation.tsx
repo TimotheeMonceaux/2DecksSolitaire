@@ -20,8 +20,8 @@ interface BouncingCard {
   duration: number;
 }
 
-const BLUE_CARD = '/cards/Card_back_blue.svg';
-const RED_CARD = '/cards/Card_back_red.svg';
+const BLUE_CARD = '/cards/Card_back_Blue.svg';
+const RED_CARD = '/cards/Card_back_Red.svg';
 
 export const VictoryAnimation: React.FC<VictoryAnimationProps> = ({
   onPlayAgain,
