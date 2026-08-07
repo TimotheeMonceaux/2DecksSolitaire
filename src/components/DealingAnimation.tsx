@@ -133,7 +133,6 @@ export const DealingAnimation: React.FC<DealingAnimationProps> = ({
               ref={(el) => {colRefs.current[colIdx] = el}}
               className={`relative flex-1 ${CARD_ASPECT} min-w-[56px] sm:min-w-[64px] h-full`}
             >
-              <div className="absolute inset-x-0 top-0 h-20 sm:h-24 md:h-26 lg:h-28 rounded-md sm:rounded-lg border-2 border-dashed border-white/15 bg-black/10" />
             </div>
           ))}
         </div>
