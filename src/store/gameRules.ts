@@ -5,9 +5,10 @@ import type { Card } from './store';
 // Check if moving a sequence of cards onto a Tableau column is legal
 export const isValidTableauMove = (movingCards: Card[], targetColumn: Card[]): boolean => {
   if (movingCards.length === 0) return false;
+  if (!isValidSubStack(movingCards)) return false;
   
-  // Rule A: Empty columns accept any card
-  if (targetColumn.length === 0) return true;
+  // Rule A: Empty columns accept only stacks starting with a king
+  if (targetColumn.length === 0) return getRankValue(movingCards[0].rank) === 13;
 
   const topTarget = targetColumn[targetColumn.length - 1];
   const bottomMoving = movingCards[0];
@@ -53,12 +54,14 @@ export const isValidSubStack = (cards: Card[]): boolean => {
 };
 
 // Check if a card is face-up and has AT LEAST ONE face-down card above it in its column
+//  NOTE: being buried is not required any longer, so this method basically just checks for face up
 export const isBuriedCard = (colCards: Card[], cardIndex: number): boolean => {
   const card = colCards[cardIndex];
   if (!card || !card.isFaceUp) return false;
 
+  return true;
   // Search indices 0 to cardIndex - 1 for any face-down card
-  return colCards.slice(cardIndex).some((c) => !c.isFaceUp);
+  //return colCards.slice(cardIndex).some((c) => !c.isFaceUp);
 };
 
 // Validate exchange eligibility between source and target cards
