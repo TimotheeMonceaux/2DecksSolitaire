@@ -113,8 +113,8 @@ export const checkWinCondition = (
 };
 
 export const isValidSubStackStartingFromKing = (col: Card[]): boolean => {
+  if (col.length < 2) return false;
   if (col[0].rank !== 'King') return false;
-  if (col.length < 2) return false; 
   let last = col[col.length - 1];
   for (let i = col.length - 2; i >= 0; i--) {
     let current = col[i]
