@@ -112,10 +112,11 @@ export const checkWinCondition = (
   return isTableauEmpty;
 };
 
-export const isValidSubStackStartingFromKing = (col: Card[]): boolean => {console.log(col.length);
+export const isValidSubStackStartingFromKing = (col: Card[]): boolean => {
+  if (col[0].rank !== 'King') return false;
   if (col.length < 2) return false; 
   let last = col[col.length - 1];
-  for (let i = col.length - 2; i > 0; i--) {
+  for (let i = col.length - 2; i >= 0; i--) {
     let current = col[i]
     if (!current.isFaceUp) return false;
     if (getRankValue(current.rank) !== getRankValue(last.rank) + 1) return false;
