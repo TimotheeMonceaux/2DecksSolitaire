@@ -19,6 +19,7 @@ import type { MoveSource, MoveTarget } from '../store/playStateSlice';
 import { DraggableCard } from './DraggableCard';
 import { DroppableColumn } from './DroppableColumn';
 import { DroppableFoundation } from './DroppableFoundation';
+import { isValidSubStackStartingFromKing } from '../store/gameRules';
 
 const CARD_ASPECT = 'w-14 h-20 sm:w-16 sm:h-24 md:w-18 md:h-26 lg:w-20 lg:h-28';
 
@@ -87,6 +88,11 @@ export const GameBoard: React.FC = () => {
     let currentIndex = deckIndex;
     for (let c = 0; c < 10; c++) {
       if (currentIndex >= deck.length) break;
+
+      // RULE UPDATE: Skip columns that already have a valid substack starting from a King
+      if (isValidSubStackStartingFromKing(tableau[c])) {
+        continue;
+      }
 
       const cardId = deck[currentIndex];
       const card: Card = {

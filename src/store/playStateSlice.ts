@@ -1,7 +1,7 @@
 // playStateSlice.ts
 import type { StateCreator } from 'zustand';
 import type { AppState, Card } from './store';
-import { isValidFoundationMove, isValidTableauMove, isValidExchange, isBuriedCard, checkWinCondition } from './gameRules';
+import { isValidFoundationMove, isValidTableauMove, isValidExchange, isBuriedCard, checkWinCondition, isValidSubStackStartingFromKing } from './gameRules';
 
 export interface MoveSource {
   type: 'tableau' | 'waste' | 'foundation';
@@ -142,6 +142,8 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
 
     for (let c = 0; c < 10; c++) {
       if (get().deckIsEmpty) break;
+      // If a column is a valid sub-stack of 2+ starting from a king, we do not cover it
+      if (isValidSubStackStartingFromKing(newTableau[c])) continue;
       const card = get().draw(true); // Draw 1 face-up card
       if (card) {
         newTableau[c].push(card);
