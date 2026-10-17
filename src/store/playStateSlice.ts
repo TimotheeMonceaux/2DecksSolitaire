@@ -17,7 +17,7 @@ export interface MoveTarget {
 export interface PlayStateSlice {
   foundations: Card[][];
   tableau: Card[][];
-  history: { tableau: Card[][]; foundations: Card[][] }[];
+  history: { tableau: Card[][]; foundations: Card[][]; deckIndex: number }[];
   moveCards: (source: MoveSource, target: MoveTarget) => boolean;
   drawRowFromDeck: () => void;
   undo: () => void;
@@ -56,6 +56,7 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
           const historySnapshot = {
             tableau: JSON.parse(JSON.stringify(state.tableau)),
             foundations: JSON.parse(JSON.stringify(state.foundations)),
+            deckIndex: state.deckIndex
           };
 
           const newTableau = state.tableau.map((col) => [...col]);
@@ -91,6 +92,7 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
     const historySnapshot = {
       tableau: JSON.parse(JSON.stringify(state.tableau)),
       foundations: JSON.parse(JSON.stringify(state.foundations)),
+      deckIndex: state.deckIndex
     };
 
     const newTableau = state.tableau.map((col) => [...col]);
@@ -136,6 +138,7 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
     const historySnapshot = {
       tableau: JSON.parse(JSON.stringify(state.tableau)),
       foundations: JSON.parse(JSON.stringify(state.foundations)),
+      deckIndex: state.deckIndex
     };
 
     const newTableau = state.tableau.map((col) => [...col]);
@@ -164,6 +167,7 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
     set({
       tableau: previousState.tableau,
       foundations: previousState.foundations,
+      deckIndex: previousState.deckIndex,
       history: history.slice(0, -1),
     });
   },
