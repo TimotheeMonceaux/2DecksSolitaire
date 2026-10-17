@@ -43,6 +43,7 @@ export const GameBoard: React.FC = () => {
 
   const history = useAppStore((state) => state.history);
   const undo = useAppStore((state) => state.undo);
+  const autoSendToFoundations = useAppStore((state) => state.autoSendToFoundations);
   const canUndo = history && history.length > 0;
 
   const topDeckImg = getDeckTopImgUrl();
@@ -313,6 +314,14 @@ export const GameBoard: React.FC = () => {
               className="px-3 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95 cursor-pointer"
             >
               Annuler
+            </button>
+            <div className="h-4 w-px bg-white/20 mx-0.5" />
+            <button
+              onClick={() => autoSendToFoundations?.()}
+              disabled={isDealing}
+              className="px-3 py-1 text-xs font-semibold rounded-md bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              Rangement Auto
             </button>
             <div className="h-4 w-px bg-white/20 mx-0.5" />
             <button

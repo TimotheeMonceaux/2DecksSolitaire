@@ -2,6 +2,7 @@
 import type { StateCreator } from 'zustand';
 import type { AppState, Card } from './store';
 import { isValidFoundationMove, isValidTableauMove, isValidExchange, isBuriedCard, checkWinCondition, isValidSubStackStartingFromKing } from './gameRules';
+import { getRankValue } from './deckSlice';
 
 export interface MoveSource {
   type: 'tableau' | 'waste' | 'foundation';
@@ -21,6 +22,7 @@ export interface PlayStateSlice {
   moveCards: (source: MoveSource, target: MoveTarget) => boolean;
   drawRowFromDeck: () => void;
   undo: () => void;
+  autoSendToFoundations: () => void;
   initialSetup: () => void;
 }
 
@@ -128,6 +130,87 @@ export const createPlayStateSlice: StateCreator<AppState, [], [], PlayStateSlice
     }
 
     return true;
+  },
+
+  autoSendToFoundations: () => {
+    const state = get();
+
+    // Check rule: Foundation must have at least one ace (or card) present
+    const hasAceInFoundations = state.foundations.some((pile) => pile.length > 0);
+    if (!hasAceInFoundations) return;
+
+    const isValidNextFoundationCard = (tCard: Card, fCard: Card): boolean => 
+      tCard.suit === fCard.suit && getRankValue(tCard.rank) === getRankValue(fCard.rank) + 1;
+
+    // Save Deep Snapshot for Undo
+    const historySnapshot = {
+      tableau: JSON.parse(JSON.stringify(state.tableau)),
+      foundations: JSON.parse(JSON.stringify(state.foundations)),
+      deckIndex: state.deckIndex,
+    };
+
+    const newTableau = state.tableau.map((col) => [...col]);
+    const newFoundations = state.foundations.map((pile) => [...pile]);
+
+    let movedAny = false;
+    let lastMovedCard: Card | null = null;
+
+    // Loop to find and move eligible top tableau cards to foundations
+    let madeMove = true;
+    while (madeMove) {
+      madeMove = false;
+
+      for (let c = 0; c < newTableau.length; c++) {
+        const col = newTableau[c];
+        if (col.length === 0) continue;
+
+        const topCard = col[col.length - 1];
+
+        // Find a matching foundation pile
+        for (let f = 0; f < newFoundations.length; f++) {
+          const pile = newFoundations[f];
+          
+          // If pile is empty, can we place an Ace? (Usually foundations start with Ace)
+          const canPlace = pile.length === 0 
+            ? topCard.rank === 'Ace' 
+            : isValidNextFoundationCard(topCard, pile[pile.length - 1]);
+
+          if (canPlace) {
+            // Remove from tableau
+            col.pop();
+
+            // Auto-flip newly exposed top card if face down
+            if (col.length > 0 && !col[col.length - 1].isFaceUp) {
+              col[col.length - 1].isFaceUp = true;
+            }
+
+            // Add to foundation
+            pile.push(topCard);
+            lastMovedCard = topCard;
+            movedAny = true;
+            madeMove = true;
+            break; // Break foundation loop, re-evaluate tableau from start
+          }
+        }
+        if (madeMove) break; // Restart outer scan to prioritize correctly
+      }
+    }
+
+    if (!movedAny) return;
+
+    set({
+      tableau: newTableau,
+      foundations: newFoundations,
+      history: [...state.history, historySnapshot],
+    });
+
+    // Check Win Condition
+    if (lastMovedCard) {
+      const isWin = checkWinCondition(lastMovedCard, newTableau, state.deckIsEmpty);
+      if (isWin) {
+        state.setGameState('WIN');
+      }
+    }
   },
 
   drawRowFromDeck: () => {
